@@ -10,65 +10,62 @@ CORS(app)
 
 game_states = {}
 
-@app.route("/connect", methods=["GET"])
-def connect():
-    print("CONNECTED")
-    return jsonify({"message": "connected"})
 
+# find location of starting green tile
+def get_start(array):
+  for y, row in enumerate(array):
+     for x, cell in enumerate(row):
+        if cell == 2:
+           return [x * 60, y * 60]
+        
 
-@app.route("/send_message", methods=["POST"])
-def get_message():
+# 1: call to initialize population and settings to simulate
+@app.route("/settings", methods=["POST"])
+def get_settings():
+    # get data sent from client
     data = request.get_json()
-    print(data)
-    message = data.get('message')
-    print("RECEIVED", message)
-    return jsonify({"message": f"Message received: {message}"})
+    board = data.get('board')
+    gen = data.get('gen')
+
+    # store all data
+    game_states['board'] = board
+    game_states['start'] = get_start(board)
+    game_states['gen'] = gen
+    game_states["population"] = get_population()
+    return jsonify({"message": "SETTINGS RECEIVED"})
 
 
-@app.route("/start", methods=["POST"])
-def start():
-   data = request.get_json()
-   print(data)
-   return jsonify({"message": "started"})
-
-
-@app.route("/get_state", methods=["GET"])
-def get_state():
-   data = [i for i in range(10)]
-   return jsonify({"data": data})
-
-
-
-# 1: call to initialize population to simulate
-@app.route("/init_population", methods=["GET"])
-def init_pop():
-    pop = get_population()
-    game_states["population"] = pop
-    return jsonify({"message": "INITIALIZED POPULATION"})
-
-
-# 2: call to renew a generation of ai
+# 2: call to renew one generation of ai
 @app.route("/new_genome", methods=["GET"])
 def new_genome():
-    nets, cars, genomes = get_new_genomes(population=game_states["population"])
+    # create new set of nets, cars, and genomes
+    nets, cars, genomes = get_new_genomes(
+                            population=game_states["population"],
+                            start=game_states['start'])
+    
+    # store all data
     game_states["nets"] = nets
     game_states["cars"] = cars
     game_states["genomes"] = genomes
     return jsonify({"message": "UPDATED NEW GENOMES"})
 
 
-# 3: call to simulate a frame of the ai running (at least 1000 frames per gen)
+# 3: call to simulate one frame of the ai (at least 1000 frames per gen)
 @app.route("/run_frame", methods=["GET"])
 def run_frame():
-    # print(game_states, "\n\n")
+    # run one simulation frame
     nets, cars, genomes = run_simulation_frame(
                                     nets=game_states["nets"], 
                                     cars=game_states["cars"], 
                                     genomes=game_states["genomes"])
+    
+    # store updated data
+    print(nets, cars, genomes)
     game_states["nets"] = nets
     game_states["cars"] = cars
     game_states["genomes"] = genomes
-
+    
+    # return car data to display on frontend
     data = [{
         "id": car.id,
         "position": car.position,
@@ -79,7 +76,11 @@ def run_frame():
     } for car in cars] if cars != None else []
 
     # print(data)
-    return jsonify({"message": "PASSED FRAME", "cars": data})
+    return jsonify({
+        "message": "PASSED FRAME", 
+        "gen": game_states['gen'], 
+        "cars": data
+    })
 
 
 # 4: call to save population info so next gen is smarter, repeat from 2
