@@ -10,16 +10,16 @@ CAR_Y = 25
 # map array and info
 global ARRAY
 ARRAY = [
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 1, 1, 1, 2, 1, 1, 1, 1, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 CELL_SIZE = 65
 WHITE = (255, 255, 255, 255)
@@ -41,10 +41,10 @@ START = get_start(ARRAY)
 
 class Car:
   # make car object  
-  def __init__(self, id):
+  def __init__(self, id, start):
     self.id = id
     # load startin position, angle, speed
-    self.position = START.copy()
+    self.position = start.copy()
     self.angle = 0
     self.speed = 2
 
@@ -164,7 +164,7 @@ def get_population():
 
 
 # reset genome and cars
-def get_new_genomes(population):
+def get_new_genomes(population, start):
     nets = []
     cars = []
     genomes = list(population.population.items())
@@ -174,7 +174,7 @@ def get_new_genomes(population):
         net = neat.nn.FeedForwardNetwork.create(g, pc)
         nets.append(net)
         g.fitness = 0
-        cars.append(Car(i))
+        cars.append(Car(i, start))
     
     return nets, cars, genomes
 
@@ -248,7 +248,6 @@ def run_simulation_frame(nets, cars, genomes):
     still_alive = 0
     for i, car in enumerate(cars):
         if car.alive:
-            print(car.id)
             reward = car.get_reward()
             if reward < -15000:
                 car.alive = False
@@ -258,7 +257,6 @@ def run_simulation_frame(nets, cars, genomes):
             still_alive += 1
             genomes[i][1].fitness += reward
     
-    print("STILL ALIVE\n\n", still_alive)
     if still_alive == 0:
         return
 
