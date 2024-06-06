@@ -13,15 +13,15 @@ current_generation = 0
 
 ARRAY = [
    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-   [0, 2, 0, 0, 0, 0, 0, 0, 1, 0],
-   [0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
    [1, 1, 0, 0, 1, 0, 1, 0, 1, 0],
-   [1, 0, 1, 1, 1, 0, 1, 0, 1, 0],
-   [1, 1, 1, 0, 0, 0, 1, 1, 1, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   [1, 0, 0, 0, 1, 0, 1, 1, 1, 1],
+   [1, 1, 1, 0, 0, 0, 1, 0, 1, 0],
+   [1, 0, 1, 1, 2, 1, 1, 1, 1, 1],
+   [1, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+   [1, 0, 1, 1, 1, 1, 1, 0, 1, 0],
+   [1, 0, 1, 0, 0, 0, 1, 1, 1, 0],
+   [1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+   [1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
 ]
 
 CELL_SIZE = 65
@@ -47,7 +47,7 @@ class Car:
   # make car object
   def __init__(self):
     # load car sprite and ready rotated version
-    self.sprite = pygame.image.load('car.png').convert() # Convert Speeds Up A Lot
+    self.sprite = pygame.image.load('./car.png').convert() # Convert Speeds Up A Lot
     self.sprite = pygame.transform.scale(self.sprite, (CAR_X, CAR_Y))
     self.rotated_sprite = self.sprite 
 
@@ -276,8 +276,6 @@ def run_simulation(genomes, config):
                    continue
                 
                 reward = min(reward, 100 + reward / 100)
-                # print("REWARD", car.id, car.position, reward, car.check_progress())
-
                 still_alive += 1
                 car.update(game_map)
                 genomes[i][1].fitness += reward
@@ -299,16 +297,12 @@ def run_simulation(genomes, config):
 
         pygame.display.flip()
         clock.tick(60) # 60 FPS
-        
-        # TESTING
-        # x = input()
-        # if(x == "q"):
-        #    sys.exit(0)
+
 
 
 
 # start simulation
-def simulate(array):
+if __name__ == "__main__":
   # set up config
   config_path = "./config.txt"
   config = neat.config.Config(neat.DefaultGenome,
