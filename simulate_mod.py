@@ -3,40 +3,13 @@ import neat
 
 
 # car size
-CAR_X = 25
-CAR_Y = 25
+CAR_X = 40
+CAR_Y = 18
 
-
-# map array and info
-global ARRAY
-ARRAY = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-]
-CELL_SIZE = 65
-WHITE = (255, 255, 255, 255)
-BLACK = (0, 0, 0, 0)
-GREEN = (0, 255, 0, 0)
-ARRAY_WIDTH = CELL_SIZE * len(ARRAY[0])
-ARRAY_HEIGHT =  CELL_SIZE * len(ARRAY)
-
-
-# find location of starting green tile
-def get_start(array):
-  for y, row in enumerate(array):
-     for x, cell in enumerate(row):
-        if cell == 2:
-           return [x * CELL_SIZE, y * CELL_SIZE]
-START = get_start(ARRAY)
-
+# map sizes
+CELL_SIZE = 60
+ARRAY_WIDTH = CELL_SIZE * 10
+ARRAY_HEIGHT =  CELL_SIZE * 10
 
 
 class Car:
@@ -49,7 +22,7 @@ class Car:
     self.speed = 2
 
     # set car center
-    self.center = [self.position[0] + CAR_X / 2, self.position[1] + CAR_Y / 2] # Calculate Center
+    self.center = [self.position[0] + (CELL_SIZE - CAR_X) / 2, self.position[1] + (CELL_SIZE - CAR_Y)/ 2] # Calculate Center
 
     # set radars to draw, radar: [(x, y), length]
     self.radars = []
@@ -61,29 +34,6 @@ class Car:
     self.distance = 0 
     self.past_positions = []
     self.time = 0
-
-  # def __init__(self, 
-  #              id, 
-  #              position = START.copy(), 
-  #              angle = 0, 
-  #              speed = 2, 
-  #              center = [START[0] + CAR_X / 2, START[1] + CAR_Y / 2],
-  #              alive = True, 
-  #              radars = [],
-  #              past_positions = [], 
-  #              distance = 0, 
-  #              time = 0
-  #             ):
-  #    self.id = id
-  #    self.position = position
-  #    self.angle = angle
-  #    self.speed = speed
-  #    self.center = center
-  #    self.alive = alive
-  #    self.radars = radars
-  #    self.past_positions = past_positions
-  #    self.distance = distance
-  #    self.time = time
 
   
   # update all car info
@@ -160,7 +110,6 @@ def get_population():
                               config_path)
   population = neat.Population(config)
   return population
-
 
 
 # reset genome and cars
