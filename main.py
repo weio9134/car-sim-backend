@@ -60,7 +60,6 @@ def run_frame():
                                     genomes=game_states["genomes"])
     
     # store updated data
-    print(nets, cars, genomes)
     game_states["nets"] = nets
     game_states["cars"] = cars
     game_states["genomes"] = genomes
@@ -75,7 +74,6 @@ def run_frame():
         "radars": car.radar if hasattr(car, 'radar') else []
     } for car in cars] if cars != None else []
 
-    # print(data)
     return jsonify({
         "message": "PASSED FRAME", 
         "gen": game_states['gen'], 
