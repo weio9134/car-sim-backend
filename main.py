@@ -32,6 +32,7 @@ def get_settings():
     game_states['start'] = get_start(board)
     game_states['gen'] = gen
     game_states["population"] = get_population()
+    game_states["stop"] = False
     return jsonify({"message": "SETTINGS RECEIVED"})
 
 
@@ -58,7 +59,15 @@ def run_frame():
                                     nets=game_states["nets"], 
                                     cars=game_states["cars"], 
                                     genomes=game_states["genomes"])
-    
+    # check if continue
+    if cars == None:
+        return jsonify({
+            "message": "GET NEW POPULTION",
+            "gen": game_states['gen'], 
+            "cars": [],
+            "continue": False
+        })
+
     # store updated data
     game_states["nets"] = nets
     game_states["cars"] = cars
@@ -68,25 +77,60 @@ def run_frame():
     data = [{
         "id": car.id,
         "position": car.position,
-        "angle": car.angle,
+        "angle": car.angle % 360,
         "center": car.center,
         "alive": car.alive,
-        "radars": car.radar if hasattr(car, 'radar') else []
-    } for car in cars] if cars != None else []
+        "radars": car.radar if hasattr(car, 'radar') else [],
+        "corners": car.corners if hasattr(car, 'corners') else []
+    } if car.alive else None for car in cars] if cars != None else []
 
     return jsonify({
         "message": "PASSED FRAME", 
         "gen": game_states['gen'], 
-        "cars": data
+        "cars": data,
+        "continue": True,
+        "stop": game_states["stop"]
     })
 
 
-# 4: call to save population info so next gen is smarter, repeat from 2
+# 4: call to update car info, repeat from 3
+@app.route("/update_cars", methods=["POST"])
+def update_car():
+    data = request.get_json()
+    new_info = data.get('cars')
+    if new_info == []:
+        return jsonify({"message": "NOTHING TO UPDATE"})
+    
+    car_list = game_states["cars"]
+    for i, car in enumerate(car_list):
+        info = new_info[i]
+        if info is None:
+            car.alive = False
+            continue
+
+        car.alive = info["alive"]
+        car.radars = info["radars"]
+
+    return jsonify({"message": "CARS UPDATED"})
+
+
+# 5: call to save population info so next gen is smarter, repeat from 2
 @app.route("/update_population")
-def update():
+def update_pop():
     pop = save_gen_info(population=game_states["population"])
     game_states["population"] = pop
-    return jsonify({"message": "POPULATION UPDATED"})
+    game_states['gen'] = game_states['gen'] - 1
+    return jsonify({
+        "message": "POPULATION UPDATED",
+        "gen": game_states['gen'],
+        "stop": game_states["stop"]
+    })
+
+
+@app.route("/stop")
+def stop():
+    game_states["stop"] = True
+    return jsonify({"message": "STOPPED"})
 
 
 @app.route("/test")

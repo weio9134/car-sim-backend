@@ -6,6 +6,13 @@ import neat
 CAR_X = 40
 CAR_Y = 18
 
+LOCAL_CORNERS = [
+    [-CAR_X/2, CAR_Y/2],
+    [CAR_X/2, CAR_Y/2],
+    [-CAR_X/2, -CAR_Y/2],
+    [CAR_X/2, -CAR_Y/2]
+]
+
 # map sizes
 CELL_SIZE = 60
 ARRAY_WIDTH = CELL_SIZE * 10
@@ -22,11 +29,10 @@ class Car:
     self.speed = 2
 
     # set car center
-    self.center = [self.position[0] + (CELL_SIZE - CAR_X) / 2, self.position[1] + (CELL_SIZE - CAR_Y)/ 2] # Calculate Center
+    self.center = [(self.position[0] + CAR_X) / 2, (self.position[1] + CAR_Y)/ 2] # Calculate Center
 
-    # set radars to draw, radar: [(x, y), length]
-    self.radars = []
-    self.drawing_radars = []
+    # set radars to draw, radar
+    self.radars = [0, 0, 0, 0, 0]
 
     self.alive = True
 
@@ -60,11 +66,12 @@ class Car:
     self.center = [int(self.position[0]) + CAR_X / 2, int(self.position[1]) + CAR_Y / 2]
 
     # get car corner to check for collision
-    length = 0.5 * CAR_X
-    left_top = [self.center[0] + math.cos(math.radians(360 - (self.angle + 30))) * length, self.center[1] + math.sin(math.radians(360 - (self.angle + 30))) * length]
-    right_top = [self.center[0] + math.cos(math.radians(360 - (self.angle + 150))) * length, self.center[1] + math.sin(math.radians(360 - (self.angle + 150))) * length]
-    left_bottom = [self.center[0] + math.cos(math.radians(360 - (self.angle + 210))) * length, self.center[1] + math.sin(math.radians(360 - (self.angle + 210))) * length]
-    right_bottom = [self.center[0] + math.cos(math.radians(360 - (self.angle + 330))) * length, self.center[1] + math.sin(math.radians(360 - (self.angle + 330))) * length]
+    hw = 0.5 * CAR_X
+    hl = 0.5 * CAR_Y
+    left_top = [self.center[0] + math.cos(math.radians(360 - (self.angle + 30))) * hw, self.center[1] + math.sin(math.radians(360 - (self.angle + 30))) * hl]
+    right_top = [self.center[0] + math.cos(math.radians(360 - (self.angle + 150))) * hw, self.center[1] + math.sin(math.radians(360 - (self.angle + 150))) * hl]
+    left_bottom = [self.center[0] + math.cos(math.radians(360 - (self.angle + 210))) * hw, self.center[1] + math.sin(math.radians(360 - (self.angle + 210))) * hl]
+    right_bottom = [self.center[0] + math.cos(math.radians(360 - (self.angle + 330))) * hw, self.center[1] + math.sin(math.radians(360 - (self.angle + 330))) * hl]
     self.corners = [left_top, right_top, left_bottom, right_bottom]
 
 
@@ -74,7 +81,7 @@ class Car:
     radars = self.radars
     vals = [0, 0, 0, 0, 0]
     for i, radar in enumerate(radars):
-        vals[i] = radar[1]
+        vals[i] = radar
     return vals  
 
 
@@ -177,37 +184,38 @@ def save_gen_info(population):
 
 # run one simulation generation turn and return data from one frame
 def run_simulation_frame(nets, cars, genomes):
-    # update each car's action
-    for i, car in enumerate(cars):
-        data = car.get_data()
-        output = nets[i].activate(data)
-        choice = output.index(max(output))
-
-        if choice == 0:
-            car.angle += 10 # Left
-        elif choice == 1:
-            car.angle -= 10 # Right
-        elif choice == 2:
-            if car.speed > 12:
-                car.speed -= 2 # Slow Down
-        else:
-            car.speed = min(12, car.speed + 2) # Speed Up
-            
-    # check if any cars are alive
+    # update each car's action and check if alive
     still_alive = 0
     for i, car in enumerate(cars):
         if car.alive:
+            # nn calc
+            data = car.get_data()
+            output = nets[i].activate(data)
+            choice = output.index(max(output))
+            # update action
+            if choice == 0:
+                car.angle += 10 # Left
+            elif choice == 1:
+                car.angle -= 10 # Right
+            elif choice == 2:
+                if car.speed > 12:
+                    car.speed -= 2 # Slow Down
+            else:
+                car.speed = min(12, car.speed + 2) # Speed Up
+
+            # update reward and genomes
             reward = car.get_reward()
             if reward < -15000:
                 car.alive = False
                 continue
             
-            reward = min(reward, 100 + reward / 100)
             still_alive += 1
+            reward = min(reward, 100 + reward / 100)
             genomes[i][1].fitness += reward
+            car.update()
     
     if still_alive == 0:
-        return
+        return nets, None, genomes
 
     return nets, cars, genomes
 
@@ -220,5 +228,4 @@ def update_sim_info():
 
 def test():
    print("TESTING")
-   print(START)
    print("FINISHED TESTING")
