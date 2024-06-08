@@ -17,7 +17,20 @@ def get_start(array):
      for x, cell in enumerate(row):
         if cell == 2:
            return [x * 60, y * 60]
-        
+
+
+# replace pop_size in config
+def mod_config_count(count):
+    with open('./config.txt', 'r') as file:
+        data = file.readlines()
+
+    # overwrite pop_size
+    data[3] = f"pop_size              = {count}\n"
+
+    # write everything back
+    with open('./config.txt', 'w') as file:
+        file.writelines(data)
+
 
 # 1: call to initialize population and settings to simulate
 @app.route("/settings", methods=["POST"])
@@ -26,6 +39,10 @@ def get_settings():
     data = request.get_json()
     board = data.get('board')
     gen = data.get('gen')
+
+    # mod config to set car count
+    count = data.get('count')
+    mod_config_count(count)
 
     # store all data
     game_states['board'] = board
@@ -131,6 +148,20 @@ def update_pop():
 def stop():
     game_states["stop"] = True
     return jsonify({"message": "STOPPED"})
+
+
+@app.route("/reset")
+def reset():
+    game_states["nets"] = None
+    game_states["cars"] = None
+    game_states["genomes"] = None
+    game_states['board'] = None
+    game_states['start'] = None
+    game_states['gen'] = None
+    game_states["population"] = None
+    game_states["stop"] = None
+    return jsonify({"message": "RESETED"})
+
 
 
 @app.route("/test")
